@@ -3,28 +3,29 @@ import torch
 from eval_policy import eval_policy, device
 from model import MyModel
 from dataset import Dataset
+import torch.optim as optim
 
 BATCH_SIZE = 64
 TOTAL_EPOCHS = 100
 LEARNING_RATE = 10e-4
 PRINT_INTERVAL = 500
 TEST_INTERVAL = 2
+STATE_SIZE = 4
+ACTION_SIZE = 2
 
 ENV_NAME = 'CartPole-v0'
 
-dataset = Dataset(data_path="../{}_dataset.pkl".format(ENV_NAME))
+dataset = Dataset(data_path="{}_dataset.pkl".format(ENV_NAME))
 dataloader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, num_workers=4)
 
 env = gym.make(ENV_NAME)
 
-# TODO INITIALIZE YOUR MODEL HERE
-model = None
+model = MyModel(STATE_SIZE, ACTION_SIZE)
 
 def train_behavioral_cloning():
     
-    # TODO CHOOSE A OPTIMIZER AND A LOSS FUNCTION FOR TRAINING YOUR NETWORK
-    optimizer = None
-    loss_function = None
+    optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
+    loss_function = torch.nn.CrossEntropyLoss()
 
     gradient_steps = 0
 
@@ -34,7 +35,7 @@ def train_behavioral_cloning():
 
             output = model(data['state'])
 
-            loss = loss_function(output, data["action"])
+            loss = loss_function(output, data["action"].type(torch.long))
 
             optimizer.zero_grad()
             loss.backward()

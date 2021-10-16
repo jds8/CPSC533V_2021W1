@@ -14,6 +14,8 @@ class Dataset(torch.utils.data.Dataset):
         return len(self.data)
 
     def __getitem__(self, index):
-        item = self.data[index]
-        # TODO YOUR CODE HERE
-        raise NotImplementedError()
+        d = {}
+        d["state"] = self.data[index][0]
+        d["action"] = self.data[index][1]
+
+        return d

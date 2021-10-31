@@ -41,6 +41,7 @@ def main(args):
     logs = defaultdict(lambda: [])
     writer = SummaryWriter(args_to_str(args))
     gif_frames = []
+    eps = torch.tensor(0.2)
 
     # Set up function for computing policy loss
     def compute_loss_pi(batch):
@@ -49,9 +50,11 @@ def main(args):
 
         # Policy loss
         if args.loss_mode == 'vpg':
-            # TODO (Task 2): implement vanilla policy gradient loss
+            loss_pi = -(logp * psi).mean()
         elif args.loss_mode == 'ppo':
-            # TODO (Task 4): implement clipped PPO loss
+            ratio = torch.exp(logp - logp_old)
+            clipped_ratio = torch.min(torch.max(ratio, 1-eps), 1+eps)
+            loss_pi = -(torch.min(ratio * psi, clipped_ratio * psi)).mean()
         else:
             raise Exception('Invalid loss_mode option', args.loss_mode)
 
@@ -66,7 +69,7 @@ def main(args):
     def compute_loss_v(batch):
         obs, ret = batch['obs'], batch['ret']
         v = ac.v(obs)
-        # TODO: (Task 2): compute value function loss
+        loss_v = torch.square(v.squeeze()-ret).mean()
         return loss_v
 
     # Set up optimizers for policy and value function
